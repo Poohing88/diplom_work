@@ -1,5 +1,7 @@
 import re
+import time
 import requests
+from db_class import persons, check_person
 
 
 def find_partner(user_info, access_token):
@@ -108,6 +110,26 @@ def find_partner(user_info, access_token):
         person['coefficient'] = coefficient
         user_list.append(person)
     user_list = sorted(user_list, key=lambda user_list: user_list['coefficient'])
+    user_list = check_person(persons, user_list)
     user_list = user_list[-101: -1]
     return user_list
 
+
+def partner_group_check(user, user_list, user_info):
+    list_user = []
+    counter = 0
+    for partner in user_list:
+        group_partner = user.get_groups(partner['id'])
+        try:
+            group_partner = group_partner['response']['items']
+        except KeyError:
+            time.sleep(0.3)
+        counter += 1
+        print(counter)
+        for group in user_info['group_user']:
+            if group in group_partner:
+                partner['coefficient'] += 0.1
+        list_user.append(partner)
+    list_user = sorted(list_user, key=lambda list_user: list_user['coefficient'])
+    list_user = list_user[-6: -1]
+    return list_user
